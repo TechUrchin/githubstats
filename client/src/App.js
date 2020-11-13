@@ -33,10 +33,25 @@ class App extends Component{
       `https://api.github.com/repos/octocat/hello-world`
       ).then(res => {
       const repo = res.data;
-      console.log(repo)
-      })
-      
+      console.log("hello from GH:", repo)
+      });
+    //call stats
+    axios.get(
+        '/api/stats/hello'
+    )
+        .then(res => {
+          console.log("Hello from stats api:", res.data)
+        });
+    //call reports
+    axios.get(
+        '/api/reports/hello'
+    )
+        .then(res => {
+          console.log("Hello from reports api:", res.data)
+        });
+
   }
+
 }
 
 export default App;
