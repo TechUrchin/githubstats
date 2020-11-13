@@ -1,4 +1,5 @@
 .App {
+  font-family: 'Courier New', Courier, monospace;
   text-align: center;
 }
 
@@ -14,6 +15,7 @@
 }
 
 .App-header {
+  
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
@@ -24,20 +26,21 @@
   color: white;
 }
 
+.App-header li {
+  font-size: 18px;
+  padding-bottom: 10px;
+  list-style-type: none;
+}
+
 .App-link {
   color: #61dafb;
 }
 
 .Button {
+  font-family: 'Courier New', Courier, monospace;
   border-radius: 5px;
-  background-color: #61dafb;
+  margin: 2%;
+  padding: 2%;
+  background-color: grey;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
