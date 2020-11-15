@@ -1,9 +1,6 @@
 package com.ghstats.statistics.controller;
 
-import com.ghstats.statistics.domain.CommitDTO;
-import com.ghstats.statistics.domain.ContributorDTO;
-import com.ghstats.statistics.domain.RepositoryCommitsDTO;
-import com.ghstats.statistics.domain.StatisticsDTO;
+import com.ghstats.statistics.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,13 +18,15 @@ public class StatisticsController {
     @PostMapping(path= "/generate")
     private ResponseEntity<StatisticsDTO> getStats(@RequestBody RepositoryCommitsDTO repository) {
 
-        String potato = generateStats(repository);
+        RepoStatsDTO repoStats = generateRepoStats(repository);
+        List<ContributorDTO> contributorStats = generateContributorStats(repository);
 
+        StatisticsDTO stats = new StatisticsDTO(repoStats, contributorStats);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(stats);
     }
 
-    public String generateStats(RepositoryCommitsDTO repository) {
+    public RepoStatsDTO generateRepoStats(RepositoryCommitsDTO repository) {
         String repoName = repository.getRepositoryName();
         String repoOwner = repository.getRepositoryName();
         List<CommitDTO> listOfCommits = repository.getCommits();
@@ -36,8 +35,20 @@ public class StatisticsController {
         LocalDateTime firstCommit = listOfCommits.stream().map(c -> c.getCommitDate()).min(LocalDateTime::compareTo).get();
         LocalDateTime lastCommit = listOfCommits.stream().map(c -> c.getCommitDate()).max(LocalDateTime::compareTo).get();
 
-        List<String> listOfGitNames = new ArrayList<>();
-        List<String> listOfGitEmails = new ArrayList<>();
+        RepoStatsDTO repoStats = new RepoStatsDTO();
+        repoStats.setRepoName(repoName);
+        repoStats.setRepoOwner(repoOwner);
+        repoStats.setNumberOfCommits(totalCommits);
+        repoStats.setFirstCommit(firstCommit);
+        repoStats.setLastCommit(lastCommit);
+
+
+        return repoStats;
+    }
+
+    public List<ContributorDTO> generateContributorStats(RepositoryCommitsDTO repository) {
+
+        List<CommitDTO> listOfCommits = repository.getCommits();
         List<ContributorDTO> listOfContributors = new ArrayList<>();
 
         for (CommitDTO commit : listOfCommits) {
@@ -47,7 +58,7 @@ public class StatisticsController {
             String githubUsername = commit.getAuthor().getGithubUsername();
             String githubUserIcon = commit.getAuthor().getGithubUserIcon();
 
-            if (!listOfContributors.contains(gitName)){
+            if (!listOfContributors.stream().anyMatch(c->c.getGitName().equals(gitName))) {
                 ContributorDTO contributor = new ContributorDTO();
                 contributor.setGitName(gitName);
                 contributor.setGitEmail(gitEmail);
@@ -59,11 +70,8 @@ public class StatisticsController {
 
                 listOfContributors.add(contributor);
             }
-
         }
 
-
-
-        return stats;
+        return listOfContributors;
     }
 }
