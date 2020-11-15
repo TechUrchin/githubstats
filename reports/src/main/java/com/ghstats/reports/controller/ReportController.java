@@ -10,13 +10,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 public class ReportController {
 
-    private static final String reportLink = "reports/src/main/resources/%s.pdf";
+//    private static final String reportLink = "reports/src/main/resources/pdf/%s-%s.pdf";
+        private static final String reportLink = "reports/src/main/resources/pdf/%s.pdf";
+
 
     private final ReportService reportService;
 
@@ -24,6 +27,7 @@ public class ReportController {
     private ResponseEntity<String> getReportLink() {
         String repoName = "example-repo";
         String link = String.format(reportLink, repoName);
+//        String link = String.format(reportLink, repoName, LocalDateTime.now().toString());
         try {
             reportService.generatePdf(link, repoName);
         } catch (IOException e) {
