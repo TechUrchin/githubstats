@@ -21,7 +21,6 @@ public class ReportService {
 
     private static final float startX = 70;
     private static final float FRONT_PAGE_START_Y = 650;
-    private static final float PAGE_WITH_HEADER_START_Y = 750;
     private static final float FULL_PAGE_START_Y = 800;
 
     private static final PDFont DEFAULT_FONT = PDType1Font.COURIER;
@@ -51,23 +50,17 @@ public class ReportService {
 
     private void writeHeader(String repoName, String repoOwner) throws IOException {
 
+        String reportCreationDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
+
         addImage();
         beginText(FRONT_PAGE_START_Y, 21f);
-        contentStream.setFont(HEADER_FONT_BOLD, 24);
-        contentStream.showText("GitHub repository statistics report");
-        contentStream.newLine();
-        contentStream.setFont(HEADER_FONT, 16);
 
-        contentStream.showText("for repository ");
-        contentStream.setFont(HEADER_FONT_BOLD, 20);
-        contentStream.showText(String.format("%s/%s", repoOwner, repoName));
-        contentStream.newLine();
+        writeTextOnNewLine("GitHub repository statistics report", HEADER_FONT_BOLD, 24);
+        writeTextOnNewLine("for repository ", HEADER_FONT, 16);
+        writeTextOnSameLine(String.format("%s/%s", repoOwner, repoName), HEADER_FONT_BOLD, 20);
+        writeTextOnNewLine("created " + reportCreationDate, HEADER_FONT_BOLD, 12);
 
-        contentStream.setFont(HEADER_FONT_BOLD, 12);
-        contentStream.showText("created " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
-        contentStream.newLine();
         writeBoldSeparator();
-        contentStream.newLine();
     }
 
     private void addImage() throws IOException {
@@ -76,24 +69,19 @@ public class ReportService {
     }
 
     private void writeRepoStatisticsSection() throws IOException {
-        String header = "Total repository statistics";
         int totalCommits = 51655;
-        contentStream.setLeading(14.5f);
-        contentStream.setFont(HEADER_FONT_BOLD, 18);
-        contentStream.showText(header);
 
-        contentStream.newLine();
-        contentStream.newLine();
+        contentStream.setLeading(14.5f);
+        writeTextOnNewLine("Total repository statistics", HEADER_FONT_BOLD, 18);
+        writeBlankLines(1);
         writeStatistics(totalCommits, LocalDate.now().minusDays(5), LocalDate.now(), 10);
+
         writeBoldSeparator();
     }
 
     private void writeContributorStatisticsSection() throws IOException {
-//        createNewCurrentPage(PAGE_WITH_HEADER_START_Y, true);
-        String header = "Contributor leaderboard";
-        contentStream.newLine();
-        contentStream.setFont(HEADER_FONT_BOLD, 18);
-        contentStream.showText(header);
+
+        writeTextOnNewLine("Contributor leaderboard", HEADER_FONT_BOLD, 18);
 
         List<String> users = Arrays.asList("Igne Cat", "Jay Cat", "Charlie Cat", "Spider Plant", "Chickwheat Seitan", "Buster Neighbour");
         int index = 1;
@@ -115,37 +103,45 @@ public class ReportService {
                 (index%(5+2) == 0 && index!=lastIndex);
     }
 
+    private void writeTextOnNewLine(String content) throws IOException {
+        contentStream.newLine();
+        contentStream.showText(content);
+    }
+
+    private void writeTextOnNewLine(String content, PDFont font, int fontSize) throws IOException {
+        contentStream.setFont(font, fontSize);
+        writeTextOnNewLine(content);
+    }
+
+    private void writeTextOnSameLine(String content, PDFont font, int fontSize) throws IOException {
+        contentStream.setFont(font, fontSize);
+        contentStream.showText(content);
+    }
+
+
     private void createNewContributorsPage() throws IOException {
         writeLightSeparator();
         createNewCurrentPage(FULL_PAGE_START_Y, true);
         contentStream.newLine();
     }
 
-
     private void writeContributorStatistics(int index, String name, String username, String email, int totalCommits, LocalDate firstCommit, LocalDate lastCommit) throws IOException {
+        String usernameFormatted = username.toLowerCase().replaceAll(" ", "");
+
         writeLightSeparator();
-        contentStream.newLine();
-        contentStream.setFont(DEFAULT_FONT_BOLD, 16);
-        contentStream.showText(String.format("%d. %s ", index, name));
-        contentStream.setFont(DEFAULT_FONT, 12);
-        contentStream.showText(String.format("Username: %s", username.toLowerCase().replaceAll(" ", "")));
-        contentStream.newLine();
-        contentStream.showText(String.format("Email: %s", email.toLowerCase().replaceAll(" ", "")));
-        contentStream.newLine();
-        contentStream.newLine();
+        writeTextOnNewLine(String.format("%d. %s ", index, name), DEFAULT_FONT_BOLD, 16);
+        writeTextOnSameLine(String.format("Username: %s", usernameFormatted), DEFAULT_FONT, 12);
+        writeTextOnNewLine(String.format("Email: %s", email.toLowerCase().replaceAll(" ", "")));
+        writeBlankLines(1);
+
         writeStatistics(totalCommits, firstCommit, lastCommit, 10);
     }
 
     private void writeStatistics(int totalCommits, LocalDate fistCommit, LocalDate lastCommit, int activeDays) throws IOException {
-        contentStream.setFont(DEFAULT_FONT, 14);
-        contentStream.showText("Total commits: " + totalCommits);
-        contentStream.newLine();
-        contentStream.showText("First commit: " + fistCommit.toString());
-        contentStream.newLine();
-        contentStream.showText("Latest commit: " + lastCommit.toString());
-        contentStream.newLine();
-        contentStream.showText(String.format("Activity duration: %d days", activeDays));
-        contentStream.newLine();
+        writeTextOnNewLine("Total commits: " + totalCommits, DEFAULT_FONT, 14);
+        writeTextOnNewLine("First commit: " + fistCommit.toString());
+        writeTextOnNewLine("Latest commit: " + lastCommit.toString());
+        writeTextOnNewLine(String.format("Activity duration: %d days", activeDays));
     }
 
     private void createNewCurrentPage(float y, boolean includeText) throws IOException {
@@ -183,6 +179,12 @@ public class ReportService {
 
     private void writeBoldSeparator() throws IOException {
         writeSeparator(DEFAULT_FONT_BOLD);
+    }
+
+    private void writeBlankLines(int number) throws IOException {
+        for(int i=0; i<number; i++) {
+            contentStream.newLine();
+        }
     }
 
 }
