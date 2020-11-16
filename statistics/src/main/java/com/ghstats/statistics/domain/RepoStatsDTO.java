@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommitDTO {
-    private LocalDateTime commitDate;
-    private CommitAuthorDTO author;
+public class RepoStatsDTO {
+    private String repoName;
+    private String repoOwner;
+    private int numberOfCommits;
+    private LocalDateTime firstCommit;
+    private LocalDateTime lastCommit;
 }
