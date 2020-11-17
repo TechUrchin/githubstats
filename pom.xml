@@ -14,6 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <main.basedir>${project.basedir}</main.basedir>
     </properties>
     <build>
         <pluginManagement>
@@ -70,8 +71,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-
-
     </build>
 
 
@@ -108,8 +107,6 @@
             <artifactId>lombok</artifactId>
             <version>1.18.12</version>
         </dependency>
-
-
     </dependencies>
 
     <modules>
