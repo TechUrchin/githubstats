@@ -32,7 +32,7 @@ public class StatisticsController {
 
     public RepoStatsDTO generateRepoStats(RepositoryCommitsDTO repository) {
         String repoName = repository.getRepositoryName();
-        String repoOwner = repository.getRepositoryName();
+        String repoOwner = repository.getRepositoryOwner();
         List<CommitDTO> listOfCommits = repository.getCommits();
 
         int totalCommits = listOfCommits.size();
