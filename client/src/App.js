@@ -9,41 +9,100 @@ class App extends Component{
   { 
     return (
       <div className="App">
-        <header className="App-header">
+        <header>
           <img src={logo} className="App-logo" alt="logo" />
           <h1>
             GitHub Stats
           </h1>
-          <h5>Coursework 2 - COMP3211 Distributed Systems</h5>
-          <li>This will give you some detailed statistics of a repository and all the users who have contributed to that repository. </li>
-          <li>This will generate a report that will be in the form of a PDF that you will be able to view in a browser or locally if you choose to download it</li>
-          <label>Owner of Github Repository</label>
-          <input placeholder="e.g octocat"></input>
-          <label>Name of Repository</label>
-          <input placeholder="e.g hello-world"></input>
-          <button className="Button" onClick={this.getGitHub}>Click Here for Stats</button>
-          <a href={this.state.reportLink} download={this.state.reportFilename}>Download report {this.state.reportFilename}</a>
+          <h2>Coursework 2 - COMP3211 Distributed Systems</h2>
         </header>
+
+        <div className="content">
+          <div className="container">
+            <div className="column">
+              <h3>What is this app?</h3>
+              <p>This app generates a PDF report containing statistics about a repository and a contributor leaderboard.</p>
+              <h3>How does it work?</h3>
+              <p>
+                This app makes a call to the GitHub API, requesting a list of commits in a repository. The data is passed to our API that generates statistics.
+                The generated statistics are passed into our final API, that is responsible for generating reports.</p>
+              <h3>How to use it?</h3>
+              <p>
+                Enter GitHub repository owner and name below to proceed. The report will then get generated, and be available for download below.
+              </p>
+            </div>
+            <div className="column notes">
+              <p>
+                <b>note:</b> This only works on public GitHub repositories, because
+                GitHub API only allows to access public repositories without authentication.
+                Some examples of public repositories:
+                <ul>
+                  {/*TODO add more repos*/}
+                  <li>octocat.hello-world</li>
+                  {/*<li></li>*/}
+                </ul>
+              </p>
+            </div>
+          </div>
+
+
+          <div className="form-wrapper">
+            <h2>Repository details</h2>
+              <label>Repository owner</label>
+              <input placeholder="e.g octocat" name="repoOwner" value={this.state.repoOwner} onChange={this.handleChange.bind(this)}/>
+
+              <label>Repository name</label>
+              <input placeholder="e.g hello-world" name="repoName" value={this.state.repoName} onChange={this.handleChange.bind(this)}/>
+
+              <button onClick={this.handleRequest}>Submit</button>
+
+              <div className="result" hidden={this.state.success==null}>
+                <p>{this.state.success}</p>
+                <a href={this.state.reportLink} download={this.state.reportFilename} hidden={this.state.reportFilename==null}>Click to download report {this.state.reportFilename}</a>
+              </div>
+          </div>
+        </div>
       </div>
     );
   }
+
+  handleChange(event) {
+    this.setState({[event.target.name]: event.target.value})
+  }
+
 state = {
+  repoName: "hello-world",
+  repoOwner: "octocat",
   repository: {},
   statistics: {},
   reportLink: '#',
-  reportFilename: 'sadfasdfsda'
+  reportFilename: null,
+  success: null
 }
+
+//reset state for new request and call the APIs
+  handleRequest = () => {
+    console.log(this.state)
+      this.setState({repository: null});
+      this.setState({statistics: null});
+      this.setState({reportLink: '#'});
+      this.setState({reportFilename: null});
+      this.setState({success: null});
+      this.getGitHub();
+  }
+
   getGitHub = () => {
-    const config = {headers: {Authorization: `Bearer 4dc896d320882759be824f64df3e1afa4675857b`}}
-    axios.get(
-      `https://api.github.com/repos/shimmamconyx/githubstats/commits`, config
-      ).then(res => {
+    const url = 'https://api.github.com/repos/'+this.state.repoOwner+'/'+this.state.repoName+'/commits';
+    axios.get(url)
+        .then(res => {
       const commits = res.data;
       let repositoryData = this.formatCommit(commits);
       this.setState({repository: repositoryData});
       this.postToStats();
-      });
-
+      })
+        .catch(err => {
+          this.setState({success: "An error has occurred while calling GitHub API. Error details: "+ err})
+        });
   }
 
   postToStats = () => {
@@ -58,11 +117,13 @@ state = {
             statistics: stats
           })
           this.postToReport();
-        });
+        })
+        .catch(err => {
+          this.setState({success: "An error has occurred while calling statistics API. Error details: "+ err})
+        })
   }
 
   postToReport = () => {
-    console.log(this.state)
     axios.post(
       '/api/reports/pdf', this.state.statistics, {
         "Content-Type":"application/json",
@@ -74,12 +135,14 @@ state = {
         const filename = res.headers["content-disposition"]
         this.setState({reportLink: url})
         this.setState({reportFilename: filename})
-      });
+        this.setState({success: "Report successfully generated!"})
+      })
+        .catch(err => {
+          this.setState({success: "An error has occurred while calling reports API. Error details: "+ err})
+        });
   }
 
-
   formatCommit = (commits) => {
-    console.log("hello from formatCommit ", commits)
     //Initialises empty JSON Object
     let repository = {
       "repositoryName": "",
@@ -98,11 +161,10 @@ state = {
           }
     }
 
-    repository.repositoryName = "githubstats"; //variable needs to be defined
-    repository.repositoryOwner = "shimmamconyx"; //Same here
+    repository.repositoryName = this.state.repoName;
+    repository.repositoryOwner = this.state.repoOwner;
     commits.forEach(i =>
     {
-      console.log(i)
       commitObject.commitDate = i.commit.author.date;
       if(i.author == null)
       {
@@ -120,7 +182,6 @@ state = {
       const updatedCommit = JSON.parse(JSON.stringify(commitObject));
       repository.commits.push(updatedCommit);
     })
-    console.log("All the Commits", repository)
     return repository;
   }
 
