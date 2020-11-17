@@ -3,6 +3,7 @@ package com.ghstats.reports.service;
 import com.ghstats.reports.domain.ContributorDTO;
 import com.ghstats.reports.domain.RepoStatsDTO;
 import com.ghstats.reports.domain.StatisticsDTO;
+import lombok.NoArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -19,8 +20,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-@Service
-public class ReportService {
+@NoArgsConstructor
+public class ReportGenerator {
 
     private static final float startX = 70;
     private static final float FRONT_PAGE_START_Y = 650;
@@ -30,7 +31,6 @@ public class ReportService {
     private static final PDFont DEFAULT_FONT_BOLD = PDType1Font.COURIER_BOLD;
     private static final PDFont HEADER_FONT_BOLD = PDType1Font.HELVETICA_BOLD;
     private static final PDFont HEADER_FONT = PDType1Font.HELVETICA;
-
 
     private static final String GH_LOGO_LOCATION = "reports/src/main/resources/img/GitHub-Mark.png";
 
@@ -74,20 +74,22 @@ public class ReportService {
     private void writeRepoStatisticsSection(RepoStatsDTO repoStatsDTO) throws IOException {
 
         contentStream.setLeading(14.5f);
+        writeBlankLines(2);
         writeTextOnNewLine("Total repository statistics", HEADER_FONT_BOLD, 18);
-        writeBlankLines(1);
+        writeLightSeparator();
         writeStatistics(repoStatsDTO.getNumberOfCommits(), repoStatsDTO.getFirstCommit().toLocalDate(),
                 repoStatsDTO.getLastCommit().toLocalDate(), repoStatsDTO.getDaysActive());
 
         writeBoldSeparator();
+
     }
 
     private void writeContributorStatisticsSection(List<ContributorDTO> contributors) throws IOException {
-
+        writeBlankLines(2);
         writeTextOnNewLine("Contributor leaderboard", HEADER_FONT_BOLD, 18);
 
         int index = 1;
-        contentStream.newLine();
+
         for(ContributorDTO contributor : contributors) {
             writeContributorStatistics(index, contributor);
             if(isNewPageNeeded(index, contributors.size())) {
@@ -95,36 +97,12 @@ public class ReportService {
             }
             index ++;
         }
-        contentStream.newLine();
     }
-
-    private boolean isNewPageNeeded(int index, int lastIndex) {
-        //First page can only fit 2 contributors components. Every page after that can fit 5.
-        // Need to handle special case when the last element fills up the page, so new page is not created.
-        return index == 2 ||
-                (index%(5+2) == 0 && index!=lastIndex);
-    }
-
-    private void writeTextOnNewLine(String content) throws IOException {
-        contentStream.newLine();
-        contentStream.showText(content);
-    }
-
-    private void writeTextOnNewLine(String content, PDFont font, int fontSize) throws IOException {
-        contentStream.setFont(font, fontSize);
-        writeTextOnNewLine(content);
-    }
-
-    private void writeTextOnSameLine(String content, PDFont font, int fontSize) throws IOException {
-        contentStream.setFont(font, fontSize);
-        contentStream.showText(content);
-    }
-
 
     private void createNewContributorsPage() throws IOException {
         writeLightSeparator();
         createNewCurrentPage(FULL_PAGE_START_Y, true);
-        contentStream.newLine();
+        writeBlankLines(1);
     }
 
     private void writeContributorStatistics(int index, ContributorDTO contributor) throws IOException {
@@ -144,6 +122,12 @@ public class ReportService {
         writeTextOnNewLine("First commit: " + fistCommit.toString());
         writeTextOnNewLine("Latest commit: " + lastCommit.toString());
         writeTextOnNewLine(String.format("Activity duration: %d days", activeDays));
+    }
+
+    private boolean isNewPageNeeded(int index, int lastIndex) {
+        //First page can only fit 2 contributors components. Every page after that can fit 5.
+        // Need to handle special case when the last element fills up the page, so new page is not created.
+        return (index == 2 || index%(5+2) == 0 ) && index!=lastIndex;
     }
 
     private void createNewCurrentPage(float y, boolean includeText) throws IOException {
@@ -187,6 +171,21 @@ public class ReportService {
         for(int i=0; i<number; i++) {
             contentStream.newLine();
         }
+    }
+
+    private void writeTextOnNewLine(String content) throws IOException {
+        contentStream.newLine();
+        contentStream.showText(content);
+    }
+
+    private void writeTextOnNewLine(String content, PDFont font, int fontSize) throws IOException {
+        contentStream.setFont(font, fontSize);
+        writeTextOnNewLine(content);
+    }
+
+    private void writeTextOnSameLine(String content, PDFont font, int fontSize) throws IOException {
+        contentStream.setFont(font, fontSize);
+        contentStream.showText(content);
     }
 
 }

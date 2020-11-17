@@ -22,13 +22,16 @@ class App extends Component{
           <label>Name of Repository</label>
           <input placeholder="e.g hello-world"></input>
           <button className="Button" onClick={this.getGitHub}>Click Here for Stats</button>
+          <a href={this.state.reportLink} download={this.state.reportFilename}>Download report {this.state.reportFilename}</a>
         </header>
       </div>
     );
   }
 state = {
   repository: {},
-  statistics: {}
+  statistics: {},
+  reportLink: '#',
+  reportFilename: 'sadfasdfsda'
 }
   getGitHub = () => {
     const config = {headers: {Authorization: `Bearer 4dc896d320882759be824f64df3e1afa4675857b`}}
@@ -36,23 +39,10 @@ state = {
       `https://api.github.com/repos/shimmamconyx/githubstats/commits`, config
       ).then(res => {
       const commits = res.data;
-      console.log("hello from GH:", commits);
       let repositoryData = this.formatCommit(commits);
       this.setState({repository: repositoryData});
       this.postToStats();
       });
-
-    //call stats
-    
-
-    //call reports
-    /*axios.get(
-        '/api/reports/hello'
-    )
-        .then(res => {
-          console.log("Hello from reports api:", res.data)
-        });
-    */
 
   }
 
@@ -75,12 +65,15 @@ state = {
     console.log(this.state)
     axios.post(
       '/api/reports/pdf', this.state.statistics, {
-        "Content-Type":"application/json"
-      }
-  )
+        "Content-Type":"application/json",
+        "responseType": "blob"
+      })
       .then(res => {
-        console.log(res);
-        console.log(res.data);
+        console.log(res)
+        const url = window.URL.createObjectURL(new Blob([res.data]))
+        const filename = res.headers["content-disposition"]
+        this.setState({reportLink: url})
+        this.setState({reportFilename: filename})
       });
   }
 

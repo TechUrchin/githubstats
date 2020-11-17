@@ -1,17 +1,23 @@
 package com.ghstats.reports.controller;
 
 import com.ghstats.reports.domain.StatisticsDTO;
-import com.ghstats.reports.service.ReportService;
+import com.ghstats.reports.service.ReportGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 
 @RestController
@@ -20,19 +26,34 @@ import java.time.LocalDateTime;
 @RequestMapping(path = "/api/reports")
 public class ReportController {
 
-    private static final String reportLink = "reports/src/main/resources/pdf/%s-%s.pdf";
-
-    private final ReportService reportService;
+    private static final String REPORT_LOCATION = "reports/src/main/resources/pdf/";
+    private static final String REPORT_FILENAME = "%s-%s.pdf";
 
     @PostMapping(path = "/pdf")
-    private ResponseEntity<String> getReportLink(@RequestBody StatisticsDTO statistics) {
+    private ResponseEntity<ByteArrayResource> getReportLink(@RequestBody StatisticsDTO statistics) {
         String repoName = statistics.getRepoStats().getRepoName();
-        String link = String.format(reportLink, repoName, LocalDateTime.now().toString());
+        String filename = String.format(REPORT_FILENAME, repoName, LocalDateTime.now().toString());
+        String link = REPORT_LOCATION + filename;
         try {
-            reportService.generatePdf(link, statistics);
+            ReportGenerator reportGenerator = new ReportGenerator();
+            reportGenerator.generatePdf(link, statistics);
+
+            File file = new File(link);
+            ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
+            return ResponseEntity.ok()
+                    .headers(headers(filename))
+                    .contentLength(file.length())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return ResponseEntity.ok(link);
+    }
+
+    private HttpHeaders headers(String filename) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, filename);
+        return headers;
     }
 }
