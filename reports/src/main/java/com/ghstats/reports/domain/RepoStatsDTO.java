@@ -1,4 +1,4 @@
-package com.ghstats.statistics.domain;
+package com.ghstats.reports.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

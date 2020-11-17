@@ -19,4 +19,5 @@ public class ContributorDTO {
     private int numberOfCommits;
     private LocalDateTime firstCommit;
     private LocalDateTime lastCommit;
+    private int daysActive;
 }

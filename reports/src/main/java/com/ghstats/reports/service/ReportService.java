@@ -1,5 +1,8 @@
 package com.ghstats.reports.service;
 
+import com.ghstats.reports.domain.ContributorDTO;
+import com.ghstats.reports.domain.RepoStatsDTO;
+import com.ghstats.reports.domain.StatisticsDTO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -35,13 +38,13 @@ public class ReportService {
     private PDPage page;
     private PDPageContentStream contentStream;
 
-    public void generatePdf(String location, String repoName) throws IOException {
+    public void generatePdf(String location, StatisticsDTO stats) throws IOException {
         document = new PDDocument();
         createNewCurrentPage(FRONT_PAGE_START_Y, false);
 
-        writeHeader(repoName, "potato");
-        writeRepoStatisticsSection();
-        writeContributorStatisticsSection();
+        writeHeader(stats.getRepoStats().getRepoName(), stats.getRepoStats().getRepoOwner());
+        writeRepoStatisticsSection(stats.getRepoStats());
+        writeContributorStatisticsSection(stats.getContributorStats());
 
         closeCurrentPage();
         document.save(location);
@@ -68,27 +71,26 @@ public class ReportService {
         contentStream.drawImage(image, 200, 680, 150, 150);
     }
 
-    private void writeRepoStatisticsSection() throws IOException {
-        int totalCommits = 51655;
+    private void writeRepoStatisticsSection(RepoStatsDTO repoStatsDTO) throws IOException {
 
         contentStream.setLeading(14.5f);
         writeTextOnNewLine("Total repository statistics", HEADER_FONT_BOLD, 18);
         writeBlankLines(1);
-        writeStatistics(totalCommits, LocalDate.now().minusDays(5), LocalDate.now(), 10);
+        writeStatistics(repoStatsDTO.getNumberOfCommits(), repoStatsDTO.getFirstCommit().toLocalDate(),
+                repoStatsDTO.getLastCommit().toLocalDate(), repoStatsDTO.getDaysActive());
 
         writeBoldSeparator();
     }
 
-    private void writeContributorStatisticsSection() throws IOException {
+    private void writeContributorStatisticsSection(List<ContributorDTO> contributors) throws IOException {
 
         writeTextOnNewLine("Contributor leaderboard", HEADER_FONT_BOLD, 18);
 
-        List<String> users = Arrays.asList("Igne Cat", "Jay Cat", "Charlie Cat", "Spider Plant", "Chickwheat Seitan", "Buster Neighbour");
         int index = 1;
         contentStream.newLine();
-        for(String user : users) {
-            writeContributorStatistics(index, user, user+"username", user+"@email.com", 10, LocalDate.now().minusDays(2), LocalDate.now());
-            if(isNewPageNeeded(index, users.size())) {
+        for(ContributorDTO contributor : contributors) {
+            writeContributorStatistics(index, contributor);
+            if(isNewPageNeeded(index, contributors.size())) {
                 createNewContributorsPage();
             }
             index ++;
@@ -125,16 +127,16 @@ public class ReportService {
         contentStream.newLine();
     }
 
-    private void writeContributorStatistics(int index, String name, String username, String email, int totalCommits, LocalDate firstCommit, LocalDate lastCommit) throws IOException {
-        String usernameFormatted = username.toLowerCase().replaceAll(" ", "");
+    private void writeContributorStatistics(int index, ContributorDTO contributor) throws IOException {
 
         writeLightSeparator();
-        writeTextOnNewLine(String.format("%d. %s ", index, name), DEFAULT_FONT_BOLD, 16);
-        writeTextOnSameLine(String.format("Username: %s", usernameFormatted), DEFAULT_FONT, 12);
-        writeTextOnNewLine(String.format("Email: %s", email.toLowerCase().replaceAll(" ", "")));
+        writeTextOnNewLine(String.format("%d. %s ", index, contributor.getGitName()), DEFAULT_FONT_BOLD, 16);
+        writeTextOnSameLine(String.format("Username: %s", contributor.getGitUsername()), DEFAULT_FONT, 12);
+        writeTextOnNewLine(String.format("Email: %s", contributor.getGitEmail()));
         writeBlankLines(1);
 
-        writeStatistics(totalCommits, firstCommit, lastCommit, 10);
+        writeStatistics(contributor.getNumberOfCommits(), contributor.getFirstCommit().toLocalDate(),
+                contributor.getLastCommit().toLocalDate(), contributor.getDaysActive());
     }
 
     private void writeStatistics(int totalCommits, LocalDate fistCommit, LocalDate lastCommit, int activeDays) throws IOException {

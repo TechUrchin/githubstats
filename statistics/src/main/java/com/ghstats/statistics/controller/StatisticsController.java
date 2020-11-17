@@ -2,12 +2,16 @@ package com.ghstats.statistics.controller;
 
 import com.ghstats.statistics.domain.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -34,6 +38,8 @@ public class StatisticsController {
         int totalCommits = listOfCommits.size();
         LocalDateTime firstCommit = listOfCommits.stream().map(c -> c.getCommitDate()).min(LocalDateTime::compareTo).get();
         LocalDateTime lastCommit = listOfCommits.stream().map(c -> c.getCommitDate()).max(LocalDateTime::compareTo).get();
+        //count number of unique days there's been activity in the repository
+        int daysActive = (int) listOfCommits.stream().map(c -> c.getCommitDate().toLocalDate()).distinct().count();
 
         RepoStatsDTO repoStats = new RepoStatsDTO();
         repoStats.setRepoName(repoName);
@@ -41,6 +47,7 @@ public class StatisticsController {
         repoStats.setNumberOfCommits(totalCommits);
         repoStats.setFirstCommit(firstCommit);
         repoStats.setLastCommit(lastCommit);
+        repoStats.setDaysActive(daysActive);
 
 
         return repoStats;
@@ -58,20 +65,22 @@ public class StatisticsController {
             String githubUsername = commit.getAuthor().getGithubUsername();
             String githubUserIcon = commit.getAuthor().getGithubUserIcon();
 
-            if (!listOfContributors.stream().anyMatch(c->c.getGitName().equals(gitName))) {
+            if (listOfContributors.stream().noneMatch(c->c.getGitEmail().equals(gitEmail))) {
                 ContributorDTO contributor = new ContributorDTO();
                 contributor.setGitName(gitName);
                 contributor.setGitEmail(gitEmail);
                 contributor.setGitUsername(githubUsername);
                 contributor.setGitUserIcon(githubUserIcon);
-                contributor.setFirstCommit(listOfCommits.stream().filter(c->c.getAuthor().getGitName().equals(gitName)).map(c -> c.getCommitDate()).min(LocalDateTime::compareTo).get());
-                contributor.setLastCommit(listOfCommits.stream().filter(c->c.getAuthor().getGitName().equals(gitName)).map(c -> c.getCommitDate()).max(LocalDateTime::compareTo).get());
-                contributor.setNumberOfCommits((int) listOfCommits.stream().filter(c -> c.getAuthor().getGitName().equals(gitName)).count());
+                contributor.setFirstCommit(listOfCommits.stream().filter(c->c.getAuthor().getGitEmail().equals(gitEmail)).map(CommitDTO::getCommitDate).min(LocalDateTime::compareTo).get());
+                contributor.setLastCommit(listOfCommits.stream().filter(c->c.getAuthor().getGitEmail().equals(gitEmail)).map(CommitDTO::getCommitDate).max(LocalDateTime::compareTo).get());
+                contributor.setNumberOfCommits((int) listOfCommits.stream().filter(c -> c.getAuthor().getGitEmail().equals(gitEmail)).count());
+                contributor.setDaysActive((int) listOfCommits.stream().filter(c->c.getAuthor().getGitEmail().equals(gitEmail)).map(c -> c.getCommitDate().toLocalDate()).distinct().count());
 
                 listOfContributors.add(contributor);
             }
         }
 
-        return listOfContributors;
+        return listOfContributors.stream().sorted(Comparator.comparingInt(ContributorDTO::getNumberOfCommits).reversed())
+                .collect(Collectors.toList());
     }
 }

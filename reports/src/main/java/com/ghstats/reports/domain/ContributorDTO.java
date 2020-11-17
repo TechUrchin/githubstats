@@ -1,4 +1,4 @@
-package com.ghstats.statistics.domain;
+package com.ghstats.reports.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,11 +11,14 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RepoStatsDTO {
-    private String repoName;
-    private String repoOwner;
+public class ContributorDTO {
+    private String gitName;
+    private String gitEmail;
+    private String gitUsername;
+    private String gitUserIcon;
     private int numberOfCommits;
     private LocalDateTime firstCommit;
     private LocalDateTime lastCommit;
     private int daysActive;
+
 }

@@ -27,18 +27,18 @@ class App extends Component{
     );
   }
 state = {
-  repository: {}
+  repository: {},
+  statistics: {}
 }
   getGitHub = () => {
-    //config = {headers: {Authorization: `Bearer 4dc896d320882759be824f64df3e1afa4675857b`}
-    let repository
+    const config = {headers: {Authorization: `Bearer 4dc896d320882759be824f64df3e1afa4675857b`}}
     axios.get(
-      `https://api.github.com/repos/octocat/hello-world/commits`
+      `https://api.github.com/repos/shimmamconyx/githubstats/commits`, config
       ).then(res => {
       const commits = res.data;
       console.log("hello from GH:", commits);
-      repository = this.formatCommit(commits);
-      this.setState({repository}); 
+      let repositoryData = this.formatCommit(commits);
+      this.setState({repository: repositoryData});
       this.postToStats();
       });
 
@@ -57,23 +57,24 @@ state = {
   }
 
   postToStats = () => {
-    let stats
-    console.log("State", this.state)
     axios.post(
         '/api/stats/generate', this.state.repository, {
           "Content-Type":"application/json"
         }
     )
         .then(res => {
-          stats = res.data;
-          console.log(stats)
+          const stats = res.data;
+          this.setState({
+            statistics: stats
+          })
+          this.postToReport();
         });
-    this.postToReport();
   }
 
   postToReport = () => {
+    console.log(this.state)
     axios.post(
-      '/api/stats/generate', this.state.stats, {
+      '/api/reports/pdf', this.state.statistics, {
         "Content-Type":"application/json"
       }
   )
@@ -104,8 +105,8 @@ state = {
           }
     }
 
-    repository.repositoryName = "Hello-World"; //variable needs to be defined
-    repository.repositoryOwner = "Octocat"; //Same here
+    repository.repositoryName = "githubstats"; //variable needs to be defined
+    repository.repositoryOwner = "shimmamconyx"; //Same here
     commits.forEach(i =>
     {
       console.log(i)
