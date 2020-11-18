@@ -47,13 +47,14 @@ public class ReportController {
                     .body(resource);
 
         } catch (IOException e) {
+            log.error(e.toString());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     private HttpHeaders headers(String filename) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, filename);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" +filename);
         return headers;
     }
 }

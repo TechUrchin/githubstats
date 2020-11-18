@@ -7,6 +7,7 @@ makeRequest = () => {
 let fetchedCommits = [];
 
 callGitHub = (owner, repo) => {
+    let startTime = new Date();
     resetResult();
     const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/commits';
     $.ajax({
@@ -20,9 +21,13 @@ callGitHub = (owner, repo) => {
             writeErrorMessage("An error has occurred while calling GitHub API. Details: "+ e.toString());
         }
     });
+    let endTime = new Date();
+    var timeDiff = endTime - startTime; //in ms
+    console.log("GitHub time taken:", timeDiff);
 }
 
 callStatistics = (commits) => {
+    let startTime = new Date();
     const url = '/api/stats/generate'
     $.ajax({
         type: "POST",
@@ -37,9 +42,13 @@ callStatistics = (commits) => {
             writeErrorMessage("An error has occurred while calling Statistics API. Details: "+ e.toString());
         }
     });
+    let endTime = new Date();
+    var timeDiff = endTime - startTime; //in ms
+    console.log("Stats time taken:", timeDiff);
 }
 
 callReports = (stats) => {
+    let startTime = new Date();
     const url = 'http://localhost:8080/api/reports/pdf'
     $.ajax({
         type: "POST",
@@ -55,11 +64,13 @@ callReports = (stats) => {
             const filename = xhr.getResponseHeader("Content-Disposition");
             writeSuccessfulResult(url, filename);
         },
-        error: function (e) {
-            writeErrorMessage("An error has occurred while calling Reports API. Details: "+ e.toString());
+        error: function (xhr, status, error) {
+            writeErrorMessage("An error has occurred while calling Reports API. Details: "+ xhr.responseText);
         }
     });
-    console.log(stats)
+    let endTime = new Date();
+    let timeDiff = endTime - startTime; //in ms
+    console.log("Reports time taken:", timeDiff);
 }
 
 formatCommit = (commits, repoName, repoOwner) => {
