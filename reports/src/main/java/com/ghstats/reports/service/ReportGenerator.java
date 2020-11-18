@@ -4,6 +4,7 @@ import com.ghstats.reports.domain.ContributorDTO;
 import com.ghstats.reports.domain.RepoStatsDTO;
 import com.ghstats.reports.domain.StatisticsDTO;
 import lombok.NoArgsConstructor;
+import org.apache.fontbox.util.autodetect.FontFileFinder;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
