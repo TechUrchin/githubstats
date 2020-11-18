@@ -10,10 +10,13 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,10 +31,10 @@ public class ReportGenerator {
     private static final float FRONT_PAGE_START_Y = 650;
     private static final float FULL_PAGE_START_Y = 800;
 
-    private static final PDFont DEFAULT_FONT = PDType1Font.COURIER;
-    private static final PDFont DEFAULT_FONT_BOLD = PDType1Font.COURIER_BOLD;
-    private static final PDFont HEADER_FONT_BOLD = PDType1Font.HELVETICA_BOLD;
-    private static final PDFont HEADER_FONT = PDType1Font.HELVETICA;
+    private PDFont DEFAULT_FONT;
+    private PDFont DEFAULT_FONT_BOLD;
+    private PDFont HEADER_FONT_BOLD;
+    private PDFont HEADER_FONT;
 
     private static final String GH_LOGO_LOCATION = "reports/src/main/resources/img/GitHub-Mark.png";
 
@@ -41,6 +44,7 @@ public class ReportGenerator {
 
     public void generatePdf(String location, StatisticsDTO stats) throws IOException {
         document = new PDDocument();
+        loadFont();
         createNewCurrentPage(FRONT_PAGE_START_Y, false);
 
         writeHeader(stats.getRepoStats().getRepoName(), stats.getRepoStats().getRepoOwner());
@@ -50,6 +54,14 @@ public class ReportGenerator {
         closeCurrentPage();
         document.save(location);
         document.close();
+    }
+
+    private void loadFont() throws IOException {
+        PDFont trueTypeFont = PDTrueTypeFont.loadTTF(document, new FileInputStream(new File("reports/src/main/resources/font/GosmickSans.ttf")));
+        DEFAULT_FONT = trueTypeFont;
+        DEFAULT_FONT_BOLD = trueTypeFont;
+        HEADER_FONT = trueTypeFont;
+        HEADER_FONT_BOLD = trueTypeFont;
     }
 
     private void writeHeader(String repoName, String repoOwner) throws IOException {
