@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
 @RequestMapping(path = "/api/reports")
 public class ReportController {
 
-    private static final String REPORT_LOCATION = "reports/src/main/resources/pdf/";
+    private static final String REPORT_LOCATION = "";
     private static final String REPORT_FILENAME = "%s-%s.pdf";
 
     @PostMapping(path = "/pdf")
@@ -38,7 +39,7 @@ public class ReportController {
             ReportGenerator reportGenerator = new ReportGenerator();
             reportGenerator.generatePdf(link, statistics);
 
-            File file = new File(link);
+            File file = new File(filename);
             ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
             return ResponseEntity.ok()
                     .headers(headers(filename))
@@ -47,13 +48,14 @@ public class ReportController {
                     .body(resource);
 
         } catch (IOException e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     private HttpHeaders headers(String filename) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, filename);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" +filename);
         return headers;
     }
 }

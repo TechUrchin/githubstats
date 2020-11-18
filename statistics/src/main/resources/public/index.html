@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub stats</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="client.js"></script>
+    <link rel="stylesheet" href="client.css">
+</head>
+
+<body>
+<div class="App">
+    <header>
+        <img src="img/github-logo.png" class="App-logo" alt="logo" />
+        <h1>
+            GitHub Stats
+        </h1>
+        <h2>Coursework 2 - COMP3211 Distributed Systems</h2>
+    </header>
+    <div class="content">
+        <div class="container">
+            <div class="column">
+                <h3>What is this app?</h3>
+                <p>This app generates a PDF report containing statistics about a repository and a contributor leaderboard.</p>
+                <h3>How does it work?</h3>
+                <p>
+                    This app makes a call to the GitHub API, requesting a list of commits in a repository. The data is passed to our API that generates statistics.
+                    The generated statistics are passed into our final API, that is responsible for generating reports.</p>
+                <h3>How to use it?</h3>
+                <p>
+                    Enter GitHub repository owner and name below to proceed. The report will then get generated, and be available for download below.
+                </p>
+            </div>
+            <div class="column notes">
+                <p>
+                    <b>note:</b> This only works on public GitHub repositories, because
+                    GitHub API only allows to access public repositories without authentication.
+                    Some examples of public repositories:
+                <ul>
+                    <li>octocat.hello-world</li>
+                    <li>microsoft.Web-Dev-For-Beginners</li>
+
+            </ul>
+                </p>
+            </div>
+        </div>
+
+
+        <div class="form-wrapper">
+            <h2>Repository details</h2>
+            <label>Repository owner</label>
+            <input placeholder="e.g octocat" name="repoOwner" id="owner-input"/>
+
+            <label>Repository name</label>
+            <input placeholder="e.g hello-world" name="repoName" id="repo-input"/>
+
+            <button onclick="makeRequest()">Submit</button>
+
+            <div id="result" hidden>
+                <p id="success-message"></p>
+                <a id="report-download-link">Click to download report</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

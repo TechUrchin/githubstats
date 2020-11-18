@@ -4,15 +4,20 @@ import com.ghstats.reports.domain.ContributorDTO;
 import com.ghstats.reports.domain.RepoStatsDTO;
 import com.ghstats.reports.domain.StatisticsDTO;
 import lombok.NoArgsConstructor;
+import org.apache.fontbox.util.autodetect.FontFileFinder;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,19 +32,20 @@ public class ReportGenerator {
     private static final float FRONT_PAGE_START_Y = 650;
     private static final float FULL_PAGE_START_Y = 800;
 
-    private static final PDFont DEFAULT_FONT = PDType1Font.COURIER;
-    private static final PDFont DEFAULT_FONT_BOLD = PDType1Font.COURIER_BOLD;
-    private static final PDFont HEADER_FONT_BOLD = PDType1Font.HELVETICA_BOLD;
-    private static final PDFont HEADER_FONT = PDType1Font.HELVETICA;
+    private PDFont DEFAULT_FONT;
+    private PDFont DEFAULT_FONT_BOLD;
+    private PDFont HEADER_FONT_BOLD;
+    private PDFont HEADER_FONT;
 
-    private static final String GH_LOGO_LOCATION = "reports/src/main/resources/img/GitHub-Mark.png";
+    private static final String GH_LOGO_LOCATION = "/img/GitHub-Mark.png";
 
     private PDDocument document;
     private PDPage page;
     private PDPageContentStream contentStream;
 
-    public void generatePdf(String location, StatisticsDTO stats) throws IOException {
+    public void generatePdf(String filename, StatisticsDTO stats) throws IOException {
         document = new PDDocument();
+        loadFont();
         createNewCurrentPage(FRONT_PAGE_START_Y, false);
 
         writeHeader(stats.getRepoStats().getRepoName(), stats.getRepoStats().getRepoOwner());
@@ -47,15 +53,23 @@ public class ReportGenerator {
         writeContributorStatisticsSection(stats.getContributorStats());
 
         closeCurrentPage();
-        document.save(location);
+        document.save(filename);
         document.close();
+    }
+
+    private void loadFont() throws IOException {
+        PDFont trueTypeFont = PDTrueTypeFont.loadTTF(document, new FileInputStream(new ClassPathResource("/font/GosmickSans.ttf").getFile()));
+        DEFAULT_FONT = trueTypeFont;
+        DEFAULT_FONT_BOLD = trueTypeFont;
+        HEADER_FONT = trueTypeFont;
+        HEADER_FONT_BOLD = trueTypeFont;
     }
 
     private void writeHeader(String repoName, String repoOwner) throws IOException {
 
         String reportCreationDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
 
-        addImage();
+        //addImage(); // we have had to edit so much to get this to work on Feng-Linux, its an absolute joke!
         beginText(FRONT_PAGE_START_Y, 21f);
 
         writeTextOnNewLine("GitHub repository statistics report", HEADER_FONT_BOLD, 24);
@@ -67,7 +81,7 @@ public class ReportGenerator {
     }
 
     private void addImage() throws IOException {
-        PDImageXObject image = PDImageXObject.createFromFile(GH_LOGO_LOCATION, document);
+        PDImageXObject image = PDImageXObject.createFromFile(new ClassPathResource(GH_LOGO_LOCATION).getPath(), document);
         contentStream.drawImage(image, 200, 680, 150, 150);
     }
 
