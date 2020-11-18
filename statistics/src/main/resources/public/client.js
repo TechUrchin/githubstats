@@ -49,7 +49,7 @@ callStatistics = (commits) => {
 
 callReports = (stats) => {
     let startTime = new Date();
-    const url = 'http://localhost:8080/api/reports/pdf'
+    const url = 'http://localhost:8070/api/reports/pdf'
     $.ajax({
         type: "POST",
         contentType: "application/json",
