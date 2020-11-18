@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -57,7 +58,7 @@ public class ReportGenerator {
     }
 
     private void loadFont() throws IOException {
-        PDFont trueTypeFont = PDTrueTypeFont.loadTTF(document, new FileInputStream(new File("reports/src/main/resources/font/GosmickSans.ttf")));
+        PDFont trueTypeFont = PDTrueTypeFont.loadTTF(document, new FileInputStream(new ClassPathResource("/font/GosmickSans.ttf").getFile()));
         DEFAULT_FONT = trueTypeFont;
         DEFAULT_FONT_BOLD = trueTypeFont;
         HEADER_FONT = trueTypeFont;
